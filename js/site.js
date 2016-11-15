@@ -1,5 +1,4 @@
 var activity_chart = dc.pieChart("#activity");
-
 var country_chart = dc.pieChart("#country");
 var region_chart = dc.geoChoroplethChart("#map");
 var who_by_chart = dc.rowChart("#who-by");
@@ -9,17 +8,26 @@ var what_items_chart = dc.rowChart("#what-items");
 var what_services_chart = dc.rowChart("#what-services");
 var where_province_chart = dc.rowChart("#where-province");
 var where_region_chart = dc.pieChart	("#where-region");
+var how_many_beneficiaries_chart = dc.rowChart	("#beneficiaries-listed");
 var cf = crossfilter(data);
+
+// How many total legs are in my house?
+//var legs = cf.groupAll().reduceSum(function(cf) { return how_many; }).value()
+//console.log(“There are ” + legs + “ legs in my house.”) // 14
+
 
 cf.activity = cf.dimension(function (d) {
 		return d.Implementing_Partner_Supported_by;
 	});
+	
 cf.country = cf.dimension(function (d) {
 		return d.REGION;
 	});
+	
 cf.what_services = cf.dimension(function (d) {
 		return d.Materials_Service_Provided;
 	});
+	
 cf.region = cf.dimension(function (d) {
 		return d.Province;
 	});
@@ -28,30 +36,40 @@ cf.who_by = cf.dimension(function (d) {
 		return d.Implementing_Partner_Supported_by;
 	});
 
+cf.how_many = cf.dimension(function (d) {
+		return d.Beneficiaries;
+	});
+
 cf.who_to = cf.dimension(function (d) {
 		return d.Primary_Beneficiary;
 	});
+	
 cf.what_activity = cf.dimension(function (d) {
 		return d.Activity;
 	});
+	
 cf.what_items = cf.dimension(function (d) {
 		return d.Materials_Service_Provided;
 	});
+	
 cf.where_province = cf.dimension(function (d) {
 		return d.Province;
 	});
+	
 cf.where_region = cf.dimension(function (d) {
 		return d.REGION;
 	});
 
-var activity = cf.activity.group();
+var activity = cf.activity.group().reduceSum(function(d) { return d.Beneficiaries; });
 var country = cf.country.group();
-var what_services = cf.what_services.group();
+var what_services = cf.what_services.group().reduceSum(function(d) { return d.Beneficiaries; });
 var region = cf.region.group();
 var who_by = cf.who_by.group();
 var who_to = cf.who_to.group();
-var what_activity = cf.what_activity.group();
-var what_items = cf.what_items.group();
+//var how_many = cf.how_many.group().reduceSum(function(d) { return d.Beneficiaries; });
+var how_many = cf.how_many.group();
+var what_activity = cf.what_activity.group().reduceSum(function(d) { return d.Beneficiaries; });
+var what_items = cf.what_items.group().reduceSum(function(d) { return d.Beneficiaries; });
 var where_region = cf.where_region.group();
 var where_province = cf.where_province.group();
 var all = cf.groupAll();
@@ -194,6 +212,36 @@ what_services_chart.width(600).height(500)
 .colorAccessor(function (d, i) {
 	return i % 8;
 });
+
+
+
+
+
+how_many_beneficiaries_chart.width(600).height(500)
+.dimension(cf.how_many)
+.group(how_many)
+.ordering(function (d) {
+	return -d.how_many
+})
+//.elasticX(true)
+.data(function (group) {
+	return group.top(50);
+})
+.colors([
+		/* 		'#D7DDEF',
+		'#70B277',
+		'#60211F',
+		'#0E2103'*/
+		'#FF7F7F'
+	])
+.colorDomain([0, 8])
+.colorAccessor(function (d, i) {
+	return i % 8;
+});
+
+
+
+
 
 region_chart.width(600).height(480)
 .dimension(cf.region)
